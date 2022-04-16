@@ -219,13 +219,51 @@ func RunVideoEncode(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 	}
 
 	for key, val := range encargs {
+		if key == "bitrate" {
+			key = "b:v"
+		}
+
 		args = append(args, fmt.Sprintf("-%s", key), val)
 	}
 
-	args = append(args, "-y", temp)
+	// Is this a two pass encode?
+	_, tp := encargs["bitrate"]
 
 	fmt.Fprintf(ui, "  Processing video using codec %s\n", encargs["codec"])
 
+	if !tp {
+		args = append(args, "-y", temp)
+
+		err := RunFFMPEG(file, paths, args, encargs["codec"], ui, -1)
+		if err != nil {
+			fmt.Fprintf(ui, "  Error while processing video\n")
+			return "", tracerr.Wrap(err)
+		}
+	} else {
+		p1 := append(args, "-pass", "1", "-f", "null", "-")
+
+		err := RunFFMPEG(file, paths, p1, encargs["codec"], ui, 1)
+		if err != nil {
+			fmt.Fprintf(ui, "  Error while processing video\n")
+			return "", tracerr.Wrap(err)
+		}
+
+		p2 := append(args, "-pass", "2", "-y", temp)
+
+		err = RunFFMPEG(file, paths, p2, encargs["codec"], ui, 2)
+		if err != nil {
+			fmt.Fprintf(ui, "  Error while processing video\n")
+			return "", tracerr.Wrap(err)
+		}
+	}
+
+	fmt.Fprintf(ui, "  Finished processing video\n")
+
+	atomic.ReplaceFile(temp, out)
+	return out, nil
+}
+
+func RunFFMPEG(file *VideoFile, paths Paths, args []interface{}, codec string, ui *uilive.Writer, pass int) error {
 	read, write := io.Pipe()
 	cmd := sh.Command(paths.FFMPEG, args...)
 	cmd = FFRedirectProgress(cmd, write)
@@ -238,19 +276,14 @@ func RunVideoEncode(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 			return
 		}
 
-		fmt.Fprintf(ui, "  Processing video using codec %s (Frame: %s; FPS: %s)\n", encargs["codec"], frame, fps)
+		if pass == -1 {
+			fmt.Fprintf(ui, "  Processing video using codec %s (Frame: %s; FPS: %s)\n", codec, frame, fps)
+		} else {
+			fmt.Fprintf(ui, "  Processing video using codec %s (Pass: %d; Frame: %s; FPS: %s)\n", codec, pass, frame, fps)
+		}
 	})
 
-	err := cmd.Run()
-	if err != nil {
-		fmt.Fprintf(ui, "  Error while processing video\n")
-		return "", tracerr.Wrap(err)
-	}
-
-	fmt.Fprintf(ui, "  Finished processing video\n")
-
-	atomic.ReplaceFile(temp, out)
-	return out, nil
+	return cmd.Run()
 }
 
 func ProcessAudio(file *VideoFile, paths Paths, workdir string, stream string) error {
@@ -345,6 +378,10 @@ func ProcessAudio(file *VideoFile, paths Paths, workdir string, stream string) e
 	args = append(args, "-ar", audio["sample_rate"])
 
 	for key, val := range encargs {
+		if key == "bitrate" {
+			key = "b:a"
+		}
+
 		args = append(args, fmt.Sprintf("-%s", key), val)
 	}
 
