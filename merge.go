@@ -75,13 +75,13 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 	args = append(args, "-i", file.Video)
 
 	// Audio
-	for audio := range file.Audio {
+	for _, audio := range file.Streams.Audio {
 		args = append(args, "-itsoffset", fmt.Sprintf("%fms", offsets[audio]))
 		args = append(args, "-i", file.Audio[audio])
 	}
 
 	// Subtitles
-	for sub := range file.Subtitles {
+	for _, sub := range file.Streams.Subtitles {
 		args = append(args, "-itsoffset", fmt.Sprintf("%fms", offsets[sub]))
 		args = append(args, "-i", file.Subtitles[sub])
 	}

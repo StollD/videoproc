@@ -18,7 +18,8 @@ type VideoFile struct {
 	Input  string
 	Output string
 
-	Config VideoConfig
+	Config  VideoConfig
+	Streams StreamConfig
 
 	Video     string
 	Audio     map[string]string

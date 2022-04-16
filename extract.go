@@ -23,14 +23,13 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 		return tracerr.Wrap(err)
 	}
 
-	var streams StreamConfig
 	for key, val := range file.Config.Streams {
 		match, err := filepath.Match(key, file.Name)
 		if err != nil || !match {
 			continue
 		}
 
-		streams = val
+		file.Streams = val
 	}
 
 	cmd := sh.Command(paths.FFPROBE, "-show_streams", "-of", "json", file.Input)
@@ -67,7 +66,7 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 			}
 
 			audio := false
-			for _, a := range streams.Audio {
+			for _, a := range file.Streams.Audio {
 				if a != track {
 					continue
 				}
@@ -77,7 +76,7 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 			}
 
 			subtitle := false
-			for _, s := range streams.Subtitles {
+			for _, s := range file.Streams.Subtitles {
 				if s != track {
 					continue
 				}
