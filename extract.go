@@ -124,28 +124,27 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 	}
 
 	file.Chapters = path
-
 	fmt.Printf("\n")
 
 	// Create a filter for the video, if neccessary
-	if file.Config.Filter == "" {
-		return nil
+	if file.Config.Filter != "" {
+		path, err = MakeFilter(file, workdir)
+		if err != nil {
+			return tracerr.Wrap(err)
+		}
+
+		file.Video = path
+
+		frames, framerate, err := VapoursynthInfo(file, paths)
+		if err != nil {
+			return tracerr.Wrap(err)
+		}
+
+		file.Frames = frames
+		file.OriginalFramerate.Parse(framerate)
+
+		fmt.Printf("\n")
 	}
-
-	path, err = MakeFilter(file, workdir)
-	if err != nil {
-		return tracerr.Wrap(err)
-	}
-
-	file.Video = path
-
-	frames, framerate, err := VapoursynthInfo(file, paths)
-	if err != nil {
-		return tracerr.Wrap(err)
-	}
-
-	file.Frames = frames
-	file.OriginalFramerate.Parse(framerate)
 
 	// Determine new framerate
 	if file.Config.Framerate != "" {
@@ -154,7 +153,6 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 		file.Framerate = file.OriginalFramerate
 	}
 
-	fmt.Printf("\n")
 	return nil
 }
 
