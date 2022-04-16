@@ -125,6 +125,8 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 
 	file.Chapters = path
 
+	fmt.Printf("\n")
+
 	// Create a filter for the video, if neccessary
 	if file.Config.Filter == "" {
 		return nil
@@ -136,7 +138,6 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 	}
 
 	file.Video = path
-	fmt.Printf("\n")
 
 	frames, framerate, err := VapoursynthInfo(file, paths)
 	if err != nil {
@@ -174,12 +175,21 @@ func ExtractStream(file *VideoFile, paths Paths, workdir string, sel string, str
 	ui.Start()
 	defer ui.Stop()
 
+	fmt.Fprintf(ui, "  Extracting stream %s\n", sel)
+
 	read, write := io.Pipe()
 	cmd := sh.Command(paths.FFMPEG, "-progress", "-", "-nostats", "-i", file.Input, "-map", sel, "-c", "copy", "-y", temp)
 	cmd = FFRedirectProgress(cmd, write)
 
 	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Extracting stream %s (Frame: %s; FPS: %s)\n", sel, data["frame"], data["fps"])
+		frame, hasFrame := data["frame"]
+		fps, hasFPS := data["fps"]
+
+		if !hasFrame || !hasFPS {
+			return
+		}
+
+		fmt.Fprintf(ui, "  Extracting stream %s (Frame: %s; FPS: %s)\n", sel, frame, fps)
 	})
 
 	err := cmd.Run()

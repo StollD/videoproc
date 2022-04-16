@@ -157,13 +157,20 @@ func RunVapoursynth(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 	cmd = FFRedirectProgress(cmd, write)
 
 	go FFReadProgress(read, func(data map[string]string) {
-		frame, err := strconv.ParseInt(data["frame"], 10, 64)
+		frame, hasFrame := data["frame"]
+		fps, hasFPS := data["fps"]
+
+		if !hasFrame || !hasFPS {
+			return
+		}
+
+		n, err := strconv.ParseInt(frame, 10, 64)
 		if err != nil {
 			return
 		}
 
-		frame = frame + int64(last) + 1
-		fmt.Fprintf(ui, "  Filtering video using filter %s (Frame: %d; FPS: %s)\n", filter, frame, data["fps"])
+		n = n + int64(last) + 1
+		fmt.Fprintf(ui, "  Filtering video using filter %s (Frame: %d; FPS: %s)\n", filter, n, fps)
 	})
 
 	err = cmd.Run()
@@ -217,12 +224,21 @@ func RunVideoEncode(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 
 	args = append(args, "-y", temp)
 
+	fmt.Fprintf(ui, "  Processing video using codec %s\n", encargs["codec"])
+
 	read, write := io.Pipe()
 	cmd := sh.Command(paths.FFMPEG, args...)
 	cmd = FFRedirectProgress(cmd, write)
 
 	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Processing video using codec %s (Frame: %s; FPS: %s)\n", encargs["codec"], data["frame"], data["fps"])
+		frame, hasFrame := data["frame"]
+		fps, hasFPS := data["fps"]
+
+		if !hasFrame || !hasFPS {
+			return
+		}
+
+		fmt.Fprintf(ui, "  Processing video using codec %s (Frame: %s; FPS: %s)\n", encargs["codec"], frame, fps)
 	})
 
 	err := cmd.Run()

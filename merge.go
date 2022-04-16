@@ -119,7 +119,14 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 	cmd = FFRedirectProgress(cmd, write)
 
 	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Creating %s (Frame: %s; FPS: %s)\n", file.Output, data["frame"], data["fps"])
+		frame, hasFrame := data["frame"]
+		fps, hasFPS := data["fps"]
+
+		if !hasFrame || !hasFPS {
+			return
+		}
+
+		fmt.Fprintf(ui, "  Creating %s (Frame: %s; FPS: %s)\n", file.Output, frame, fps)
 	})
 
 	err = cmd.Run()
