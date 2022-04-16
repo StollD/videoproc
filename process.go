@@ -95,10 +95,10 @@ func ProcessVideo(file *VideoFile, paths Paths, workdir string) error {
 }
 
 func RunVapoursynth(file *VideoFile, paths Paths, workdir string, ui *uilive.Writer) (string, error) {
-	frames := filepath.Join(workdir, fmt.Sprintf("%s_frames", file.Name))
+	frames := filepath.Join(workdir, fmt.Sprintf("%s_%s", file.Name, file.VideoID))
 	out := filepath.Join(frames, "%09d.tiff")
 
-	name := fmt.Sprintf("%s_video", file.Name)
+	name := fmt.Sprintf("%s_%s", file.Name, file.VideoID)
 	mkv := filepath.Join(workdir, fmt.Sprintf("%s.mkv", name))
 
 	// The encoded file already exists
@@ -186,7 +186,7 @@ func RunVapoursynth(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 func RunVideoEncode(file *VideoFile, paths Paths, workdir string, ui *uilive.Writer) (string, error) {
 	var args []interface{}
 
-	name := fmt.Sprintf("%s_video", file.Name)
+	name := fmt.Sprintf("%s_%s", file.Name, file.VideoID)
 	out := filepath.Join(workdir, fmt.Sprintf("%s.mkv", name))
 	temp := filepath.Join(workdir, fmt.Sprintf("%s.temp.mkv", name))
 
