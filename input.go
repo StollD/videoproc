@@ -67,7 +67,7 @@ func FindInputs(paths Paths) ([]VideoFile, error) {
 
 				Audio:     map[string]string{},
 				Subtitles: map[string]string{},
-				Probe:     map[string]map[string]interface{}{},
+				Offsets:   map[string]float64{},
 			}
 
 			fmt.Printf("  Found input: %s\n", video.Input)

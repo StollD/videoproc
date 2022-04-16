@@ -327,8 +327,8 @@ func ProcessAudio(file *VideoFile, paths Paths, workdir string, stream string) e
 
 	fmt.Fprintf(ui, "  Probing audio %s\n", stream)
 
-	audio := file.Probe[stream]
 	var mediainfo map[string]interface{}
+	samplerate := ""
 
 	err := sh.Command(paths.MediaInfo, "--Output=JSON", "-f", file.Audio[stream]).UnmarshalJSON(&mediainfo)
 	if err != nil {
@@ -349,6 +349,9 @@ func ProcessAudio(file *VideoFile, paths Paths, workdir string, stream string) e
 		if track["@type"].(string) != "Audio" {
 			continue
 		}
+
+		// Read the sample rate
+		samplerate = track["SamplingRate"].(string)
 
 		// The interesting stuff is under extra
 		extra := track["extra"].(map[string]interface{})
@@ -373,9 +376,9 @@ func ProcessAudio(file *VideoFile, paths Paths, workdir string, stream string) e
 
 	args = append(args, "-i", file.Audio[stream])
 
-	filter := fmt.Sprintf("asetrate=%s*%f,aresample", audio["sample_rate"].(string), file.Speedup())
+	filter := fmt.Sprintf("asetrate=%s*%f,aresample", samplerate, file.Speedup())
 	args = append(args, "-af", filter)
-	args = append(args, "-ar", audio["sample_rate"])
+	args = append(args, "-ar", samplerate)
 
 	for key, val := range encargs {
 		if key == "bitrate" {

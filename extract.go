@@ -32,7 +32,9 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 		file.Streams = val
 	}
 
-	cmd := sh.Command(paths.FFPROBE, "-show_streams", "-of", "json", file.Input)
+	fmt.Printf("  Probing input file\n\n")
+
+	cmd := sh.Command(paths.FFPROBE, "-show_streams", "-probesize", "10G", "-analyzeduration", "10G", "-of", "json", file.Input)
 	null, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0644)
 	if err == nil {
 		cmd.Stderr = null
@@ -95,6 +97,13 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 				return tracerr.Wrap(err)
 			}
 
+			start, err := strconv.ParseFloat(stream["start_time"].(string), 64)
+			if err != nil {
+				return tracerr.Wrap(err)
+			}
+
+			file.Offsets[track] = start
+
 			if video {
 				file.Video = path
 				file.VideoID = track
@@ -110,8 +119,6 @@ func ExtractStreams(file *VideoFile, paths Paths) error {
 			if subtitle {
 				file.Subtitles[track] = path
 			}
-
-			file.Probe[track] = stream
 		}
 	}
 

@@ -27,7 +27,7 @@ type VideoFile struct {
 	Chapters  string
 
 	VideoID string
-	Probe   map[string]map[string]interface{}
+	Offsets map[string]float64
 
 	Frames            int
 	Framerate         Framerate
