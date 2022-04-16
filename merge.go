@@ -107,6 +107,7 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 	name := strings.TrimSuffix(filepath.Base(file.Output), filepath.Ext(file.Output))
 	temp := filepath.Join(filepath.Dir(file.Output), fmt.Sprintf("%s.temp.mkv", name))
 
+	args = append(args, "-copyts")
 	args = append(args, "-codec", "copy")
 	args = append(args, "-disposition", "0")
 	args = append(args, "-disposition:a:0", "default")
