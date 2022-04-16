@@ -424,7 +424,7 @@ func ProcessSubtitle(file *VideoFile, paths Paths, workdir string, stream string
 	args = append(args, "-i", file.Subtitles[stream])
 	args = append(args, "-map", "0")
 	args = append(args, "-bsf", fmt.Sprintf("setts=TS*%f", file.Slowdown()))
-	args = append(args, "-c", "copy", "-copyts")
+	args = append(args, "-c", "copy")
 	args = append(args, "-y", temp)
 
 	fmt.Fprintf(ui, "  Processing subtitle %s\n", stream)
