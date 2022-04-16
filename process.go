@@ -115,7 +115,7 @@ func RunVapoursynth(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 		return "", tracerr.Wrap(err)
 	}
 
-	files, err := filepath.Glob(filepath.Join(out, "*.tiff"))
+	files, err := filepath.Glob(filepath.Join(frames, "*.tiff"))
 	if err != nil {
 		return "", tracerr.Wrap(err)
 	}
