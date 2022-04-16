@@ -149,12 +149,21 @@ func RunVapoursynth(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 	fmt.Fprintf(ui, "  Filtering video using filter %s\n", filter)
 
 	read, write := io.Pipe()
+
 	vspipe := sh.Command(paths.VSPipe, file.Video, "-", "-c", "y4m", "-s", ls)
+	vspipe.PipeStdErrors = true
+
 	cmd := vspipe.Command(paths.FFMPEG, "-progress", "-", "-nostats", "-i", "pipe:", "-f", "image2", "-start_number", ls, out)
 	cmd = FFRedirectProgress(cmd, write)
 
 	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Filtering video using filter %s: %s (Frame: %s; FPS: %s)\n ", filter, data["out_time"], data["frame"], data["fps"])
+		frame, err := strconv.ParseInt(data["frame"], 10, 64)
+		if err != nil {
+			return
+		}
+
+		frame = frame + int64(last) + 1
+		fmt.Fprintf(ui, "  Filtering video using filter %s (Frame: %d; FPS: %s)\n", filter, frame, data["fps"])
 	})
 
 	err = cmd.Run()
@@ -162,9 +171,6 @@ func RunVapoursynth(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 		fmt.Fprintf(ui, "  Error while filtering video\n")
 		return "", tracerr.Wrap(err)
 	}
-
-	read.Close()
-	write.Close()
 
 	fmt.Fprintf(ui, "  Finished filtering video\n")
 	return out, nil
@@ -216,7 +222,7 @@ func RunVideoEncode(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 	cmd = FFRedirectProgress(cmd, write)
 
 	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Processing video using codec %s: %s (Frame: %s; FPS: %s)\n", encargs["codec"], data["out_time"], data["frame"], data["fps"])
+		fmt.Fprintf(ui, "  Processing video using codec %s (Frame: %s; FPS: %s)\n", encargs["codec"], data["frame"], data["fps"])
 	})
 
 	err := cmd.Run()
@@ -224,9 +230,6 @@ func RunVideoEncode(file *VideoFile, paths Paths, workdir string, ui *uilive.Wri
 		fmt.Fprintf(ui, "  Error while processing video\n")
 		return "", tracerr.Wrap(err)
 	}
-
-	read.Close()
-	write.Close()
 
 	fmt.Fprintf(ui, "  Finished processing video\n")
 
@@ -333,22 +336,11 @@ func ProcessAudio(file *VideoFile, paths Paths, workdir string, stream string) e
 
 	fmt.Fprintf(ui, "  Processing audio %s using codec %s\n", stream, encargs["codec"])
 
-	read, write := io.Pipe()
-	cmd := sh.Command(paths.FFMPEG, args...)
-	cmd = FFRedirectProgress(cmd, write)
-
-	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Processing audio %s using codec %s: %s\n", stream, encargs["codec"], data["out_time"])
-	})
-
-	err = cmd.Run()
+	_, err = sh.Command(paths.FFMPEG, args...).CombinedOutput()
 	if err != nil {
 		fmt.Fprintf(ui, "  Error while processing audio %s\n", stream)
 		return tracerr.Wrap(err)
 	}
-
-	read.Close()
-	write.Close()
 
 	fmt.Fprintf(ui, "  Finished processing audio %s\n", stream)
 
@@ -384,23 +376,11 @@ func ProcessSubtitle(file *VideoFile, paths Paths, workdir string, stream string
 
 	fmt.Fprintf(ui, "  Processing subtitle %s\n", stream)
 
-	read, write := io.Pipe()
-	cmd := sh.Command(paths.FFMPEG, args...)
-	cmd = FFRedirectProgress(cmd, write)
-	cmd.ShowCMD = true
-
-	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Processing subtitle %s: %s\n", stream, data["out_time"])
-	})
-
-	err := cmd.Run()
+	_, err := sh.Command(paths.FFMPEG, args...).CombinedOutput()
 	if err != nil {
 		fmt.Fprintf(ui, "  Error while processing subtitle %s\n", stream)
 		return tracerr.Wrap(err)
 	}
-
-	read.Close()
-	write.Close()
 
 	fmt.Fprintf(ui, "  Finished processing subtitle %s\n", stream)
 

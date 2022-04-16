@@ -179,7 +179,7 @@ func ExtractStream(file *VideoFile, paths Paths, workdir string, sel string, str
 	cmd = FFRedirectProgress(cmd, write)
 
 	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Extracting stream %s: %s (Frame: %s; FPS: %s)\n", sel, data["out_time"], data["frame"], data["fps"])
+		fmt.Fprintf(ui, "  Extracting stream %s (Frame: %s; FPS: %s)\n", sel, data["frame"], data["fps"])
 	})
 
 	err := cmd.Run()

@@ -24,7 +24,7 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 	}
 
 	if _, err := os.Stat(file.Output); !os.IsNotExist(err) {
-		fmt.Printf("  Already assembled %s\n", file.Output)
+		fmt.Printf("  Already assembled %s\n\n", file.Output)
 		return nil
 	}
 
@@ -119,7 +119,7 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 	cmd = FFRedirectProgress(cmd, write)
 
 	go FFReadProgress(read, func(data map[string]string) {
-		fmt.Fprintf(ui, "  Creating %s: %s (Frame: %s; FPS: %s)\n", file.Output, data["out_time"], data["frame"], data["fps"])
+		fmt.Fprintf(ui, "  Creating %s (Frame: %s; FPS: %s)\n", file.Output, data["frame"], data["fps"])
 	})
 
 	err = cmd.Run()
@@ -129,9 +129,6 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 
 		return tracerr.Wrap(err)
 	}
-
-	read.Close()
-	write.Close()
 
 	if paths.MKVPropEdit != "" {
 		fmt.Fprintf(ui, "  Updating metadata of %s\n", file.Output)
