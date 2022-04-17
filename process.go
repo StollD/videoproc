@@ -377,12 +377,29 @@ func ProcessAudio(file *VideoFile, paths Paths, workdir string, stream string) e
 	args = append(args, "-i", file.Audio[stream])
 
 	filter := fmt.Sprintf("asetrate=%s*%f,aresample", samplerate, file.Speedup())
+
+	// If the pitch should be kept, we need to adjust the filter
+	if val, hasPitch := encargs["keep_pitch"]; hasPitch {
+		keepPitch, err := strconv.ParseBool(val)
+		if err != nil {
+			return tracerr.Wrap(err)
+		}
+
+		if keepPitch {
+			filter = fmt.Sprintf("atempo=%f", file.Speedup())
+		}
+	}
+
 	args = append(args, "-af", filter)
 	args = append(args, "-ar", samplerate)
 
 	for key, val := range encargs {
 		if key == "bitrate" {
 			key = "b:a"
+		}
+
+		if key == "keep_pitch" {
+			continue
 		}
 
 		args = append(args, fmt.Sprintf("-%s", key), val)
