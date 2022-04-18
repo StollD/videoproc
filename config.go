@@ -8,11 +8,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type StreamConfig struct {
-	Audio     []string
-	Subtitles []string
-}
-
 type VideoConfig struct {
 	Name string `yaml:"-"`
 
@@ -24,7 +19,7 @@ type VideoConfig struct {
 	Audio map[string]string
 
 	// Streams to copy
-	Streams map[string]StreamConfig
+	Streams map[string][]string
 }
 
 func LoadConfig(paths Paths, config string) (VideoConfig, error) {

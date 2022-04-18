@@ -13,11 +13,11 @@ type Paths struct {
 	Working string
 	Output  string
 
-	FFMPEG      string
-	FFPROBE     string
-	VSPipe      string
-	MediaInfo   string
-	MKVPropEdit string
+	FFMPEG    string
+	FFPROBE   string
+	VSPipe    string
+	MediaInfo string
+	MKVMerge  string
 }
 
 func (paths Paths) Abs() (Paths, error) {
@@ -75,9 +75,9 @@ func (paths Paths) Abs() (Paths, error) {
 		}
 	}
 
-	mkvpropedit := paths.MKVPropEdit
-	if _, err := os.Stat(mkvpropedit); !os.IsNotExist(err) {
-		mkvpropedit, err = filepath.Abs(mkvpropedit)
+	mkvmerge := paths.MKVMerge
+	if _, err := os.Stat(mkvmerge); !os.IsNotExist(err) {
+		mkvmerge, err = filepath.Abs(mkvmerge)
 		if err != nil {
 			return new, tracerr.Wrap(err)
 		}
@@ -92,7 +92,7 @@ func (paths Paths) Abs() (Paths, error) {
 	new.FFPROBE = ffprobe
 	new.VSPipe = vspipe
 	new.MediaInfo = mediainfo
-	new.MKVPropEdit = mkvpropedit
+	new.MKVMerge = mkvmerge
 
 	return new, nil
 }

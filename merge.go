@@ -37,16 +37,16 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 	args = append(args, "-itsoffset", fmt.Sprintf("%fs", file.Offsets[file.VideoID]*file.Slowdown()))
 	args = append(args, "-i", file.Video)
 
-	// Audio
-	for _, audio := range file.Streams.Audio {
-		args = append(args, "-itsoffset", fmt.Sprintf("%fs", file.Offsets[audio]*file.Slowdown()))
-		args = append(args, "-i", file.Audio[audio])
-	}
+	for _, stream := range file.Streams {
+		args = append(args, "-itsoffset", fmt.Sprintf("%fs", file.Offsets[stream]*file.Slowdown()))
 
-	// Subtitles
-	for _, sub := range file.Streams.Subtitles {
-		args = append(args, "-itsoffset", fmt.Sprintf("%fs", file.Offsets[sub]*file.Slowdown()))
-		args = append(args, "-i", file.Subtitles[sub])
+		if val, exists := file.Audio[stream]; exists {
+			args = append(args, "-i", val)
+		}
+
+		if val, exists := file.Subtitles[stream]; exists {
+			args = append(args, "-i", val)
+		}
 	}
 
 	// Chapters
@@ -59,6 +59,7 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 	for i := 0; i < count; i++ {
 		args = append(args, "-map", fmt.Sprintf("%d", i))
 		args = append(args, fmt.Sprintf("-metadata:s:%d", i), "title=")
+		args = append(args, fmt.Sprintf("-metadata:s:%d", i), "ENCODER=")
 	}
 
 	// Map chapters
@@ -69,10 +70,12 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 	// Output
 	name := strings.TrimSuffix(filepath.Base(file.Output), filepath.Ext(file.Output))
 	temp := filepath.Join(filepath.Dir(file.Output), fmt.Sprintf("%s.temp.mkv", name))
+	temp2 := filepath.Join(filepath.Dir(file.Output), fmt.Sprintf("%s.temp2.mkv", name))
 
 	args = append(args, "-codec", "copy")
 	args = append(args, "-disposition", "0")
 	args = append(args, "-disposition:a:0", "default")
+	args = append(args, "-metadata", "title=")
 	args = append(args, "-y", temp)
 
 	fmt.Fprintf(ui, "  Creating %s\n", file.Output)
@@ -100,13 +103,14 @@ func MergeStreams(file *VideoFile, paths Paths) error {
 		return tracerr.Wrap(err)
 	}
 
-	if paths.MKVPropEdit != "" {
-		fmt.Fprintf(ui, "  Updating metadata of %s\n", file.Output)
+	fmt.Fprintf(ui, "  Updating metadata of %s\n", file.Output)
 
-		sh.Command(paths.MKVPropEdit, "--delete-track-statistics-tags", temp).CombinedOutput()
-		sh.Command(paths.MKVPropEdit, "--add-track-statistics-tags", temp).CombinedOutput()
+	_, err = sh.Command(paths.MKVMerge, temp, "-o", temp2).CombinedOutput()
+	if err != nil {
+		return tracerr.Wrap(err)
 	}
 
+	atomic.ReplaceFile(temp2, temp)
 	atomic.ReplaceFile(temp, file.Output)
 
 	fmt.Fprintf(ui, "  Finished creating %s\n", file.Output)

@@ -21,7 +21,7 @@ func main() {
 	flag.StringVar(&paths.FFPROBE, "ffprobe", "ffprobe", "Path to ffprobe executable")
 	flag.StringVar(&paths.VSPipe, "vspipe", "vspipe", "Path to vspipe executable")
 	flag.StringVar(&paths.MediaInfo, "mediainfo", "mediainfo", "Path to mediainfo executable")
-	flag.StringVar(&paths.MKVPropEdit, "mkvpropedit", "mkvpropedit", "Path to mkvpropedit executable")
+	flag.StringVar(&paths.MKVMerge, "mkvmerge", "mkvmerge", "Path to mkvmerge executable")
 	flag.Parse()
 
 	// Check if input directories exist
@@ -103,19 +103,19 @@ func main() {
 		fmt.Printf("SUCCESS\n")
 	}
 
-	// Test mkvpropedit
-	fmt.Printf("Testing %s: ", paths.MKVPropEdit)
-	_, err = sh.Command(paths.MKVPropEdit, "--version").CombinedOutput()
+	// Test mkvmerge
+	fmt.Printf("Testing %s: ", paths.MKVMerge)
+	_, err = sh.Command(paths.MKVMerge, "--version").CombinedOutput()
 
 	if err != nil {
 		fmt.Printf("FAILED\n")
-		paths.MKVPropEdit = ""
+		paths.MKVMerge = ""
 	} else {
 		fmt.Printf("SUCCESS\n")
 	}
 
 	// Check if any required tool is missing
-	if paths.FFMPEG == "" || paths.FFPROBE == "" {
+	if paths.FFMPEG == "" || paths.FFPROBE == "" || paths.MKVMerge == "" {
 		fmt.Printf("\nffmpeg and ffprobe are required!")
 		os.Exit(1)
 	}
