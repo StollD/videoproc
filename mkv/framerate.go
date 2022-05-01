@@ -1,4 +1,4 @@
-package main
+package mkv
 
 import (
 	"fmt"
@@ -11,29 +11,6 @@ import (
 type Framerate struct {
 	Numerator   int
 	Denominator int
-}
-
-type VideoFile struct {
-	Name   string
-	Input  string
-	Output string
-
-	Config  VideoConfig
-	Streams []string
-
-	Video     string
-	Audio     map[string]string
-	Subtitles map[string]string
-	Chapters  string
-
-	VideoID string
-	Offsets map[string]float64
-
-	Frames            int
-	Framerate         Framerate
-	OriginalFramerate Framerate
-
-	Aspect string
 }
 
 func (framerate *Framerate) Parse(raw string) error {
@@ -71,12 +48,4 @@ func (framerate Framerate) String() string {
 
 func (framerate Framerate) Value() float64 {
 	return float64(framerate.Numerator) / float64(framerate.Denominator)
-}
-
-func (video VideoFile) Speedup() float64 {
-	return video.Framerate.Value() / video.OriginalFramerate.Value()
-}
-
-func (video VideoFile) Slowdown() float64 {
-	return 1 / video.Speedup()
 }

@@ -4,19 +4,24 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
+	"github.com/StollD/videoproc/mkv"
 	"github.com/ztrue/tracerr"
 )
 
-func FindInputs(paths Paths) ([]VideoFile, error) {
+type Input struct {
+	MKV *mkv.MKV
+	CFG Config
+}
+
+func FindInputs(paths Paths) ([]Input, error) {
 	// Find entries within the input directory
 	subdirs, err := os.ReadDir(paths.Input)
 	if err != nil {
 		return nil, tracerr.Wrap(err)
 	}
 
-	ret := []VideoFile{}
+	ret := []Input{}
 
 	if len(subdirs) == 0 {
 		fmt.Printf("No inputs found\n\n")
@@ -50,31 +55,23 @@ func FindInputs(paths Paths) ([]VideoFile, error) {
 			}
 
 			ext := filepath.Ext(file.Name())
-			base := strings.TrimSuffix(file.Name(), ext)
 
 			// We only care about mkv files
 			if ext != ".mkv" {
 				continue
 			}
 
-			video := VideoFile{
-				Name:   base,
-				Input:  filepath.Join(path, file.Name()),
-				Output: filepath.Join(paths.Output, dir.Name(), file.Name()),
-				Config: config,
-
-				Frames: -1,
-
-				Audio:     map[string]string{},
-				Subtitles: map[string]string{},
-				Offsets:   map[string]float64{},
+			mkv := mkv.NewMKV(filepath.Join(path, file.Name()))
+			video := Input{
+				MKV: mkv,
+				CFG: config,
 			}
 
-			fmt.Printf("  Found input: %s\n", video.Input)
+			fmt.Printf("  Found input: %s/%s\n", config.Name, file.Name())
 			ret = append(ret, video)
 		}
 
-		fmt.Println()
+		fmt.Printf("\n")
 	}
 
 	return ret, nil

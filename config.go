@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -8,31 +9,31 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type VideoConfig struct {
+type Config struct {
 	Name string `yaml:"-"`
 
 	Filter    string
 	Framerate string
 
 	// Codecs
-	Video map[string]string
-	Audio map[string]string
+	Video map[string]map[string]string
+	Audio map[string]map[string]string
 
 	// Streams to copy
 	Streams map[string][]string
 }
 
-func LoadConfig(paths Paths, config string) (VideoConfig, error) {
-	conf := VideoConfig{}
+func LoadConfig(paths Paths, config string) (Config, error) {
+	conf := Config{}
 	path := filepath.Join(paths.Config, config)
 
 	for _, ext := range []string{"yaml", "yml", "json"} {
-		if _, err := os.Stat(path + "." + ext); err != nil {
-			continue
-		}
+		p := fmt.Sprintf("%s.%s", path, ext)
 
-		path = path + "." + ext
-		break
+		if _, err := os.Stat(p); !os.IsNotExist(err) {
+			path = p
+			break
+		}
 	}
 
 	data, err := os.ReadFile(path)

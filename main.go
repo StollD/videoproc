@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/StollD/videoproc/common"
 	"github.com/codeskyblue/go-sh"
+	"github.com/fatih/color"
 	"github.com/ztrue/tracerr"
 )
 
@@ -17,11 +19,6 @@ func main() {
 	flag.StringVar(&paths.Config, "c", "config", "Config directory")
 	flag.StringVar(&paths.Working, "w", "working", "Working directory")
 	flag.StringVar(&paths.Output, "o", "output", "Output directory")
-	flag.StringVar(&paths.FFMPEG, "ffmpeg", "ffmpeg", "Path to ffmpeg executable")
-	flag.StringVar(&paths.FFPROBE, "ffprobe", "ffprobe", "Path to ffprobe executable")
-	flag.StringVar(&paths.VSPipe, "vspipe", "vspipe", "Path to vspipe executable")
-	flag.StringVar(&paths.MediaInfo, "mediainfo", "mediainfo", "Path to mediainfo executable")
-	flag.StringVar(&paths.MKVMerge, "mkvmerge", "mkvmerge", "Path to mkvmerge executable")
 	flag.Parse()
 
 	// Check if input directories exist
@@ -59,68 +56,73 @@ func main() {
 
 	fmt.Printf("\n=====================\n\n")
 
+	failed := false
+
 	// Test ffmpeg
-	fmt.Printf("Testing %s: ", paths.FFMPEG)
-	_, err = sh.Command(paths.FFMPEG, "-version").CombinedOutput()
+	fmt.Printf("Testing ffmpeg\t\t")
+	_, err = sh.Command(common.FFMPEG, "-version").CombinedOutput()
 
 	if err != nil {
-		fmt.Printf("FAILED\n")
-		paths.FFMPEG = ""
+		color.Red("✗")
+		failed = true
 	} else {
-		fmt.Printf("SUCCESS\n")
+		color.Green("✓")
 	}
 
 	// Test ffprobe
-	fmt.Printf("Testing %s: ", paths.FFPROBE)
-	_, err = sh.Command(paths.FFPROBE, "-version").CombinedOutput()
+	fmt.Printf("Testing ffprobe\t\t")
+	_, err = sh.Command(common.FFPROBE, "-version").CombinedOutput()
 
 	if err != nil {
-		fmt.Printf("FAILED\n")
-		paths.FFPROBE = ""
+		color.Red("✗")
+		failed = true
 	} else {
-		fmt.Printf("SUCCESS\n")
+		color.Green("✓")
 	}
 
 	// Test vspipe
-	fmt.Printf("Testing %s: ", paths.VSPipe)
-	_, err = sh.Command(paths.VSPipe, "--version").CombinedOutput()
+	fmt.Printf("Testing vspipe\t\t")
+	_, err = sh.Command(common.VSPIPE, "--version").CombinedOutput()
 
 	if err != nil {
-		fmt.Printf("FAILED\n")
-		paths.VSPipe = ""
+		color.Red("✗")
+		failed = true
 	} else {
-		fmt.Printf("SUCCESS\n")
+		color.Green("✓")
 	}
 
 	// Test mediainfo
-	fmt.Printf("Testing %s: ", paths.MediaInfo)
-	_, err = sh.Command(paths.MediaInfo, "--Version").CombinedOutput()
+	fmt.Printf("Testing mediainfo\t")
+	_, err = sh.Command(common.MEDIAINFO, "--Version").CombinedOutput()
 
 	if err != nil {
-		fmt.Printf("FAILED\n")
-		paths.MediaInfo = ""
+		color.Red("✗")
+		failed = true
 	} else {
-		fmt.Printf("SUCCESS\n")
+		color.Green("✓")
 	}
 
 	// Test mkvmerge
-	fmt.Printf("Testing %s: ", paths.MKVMerge)
-	_, err = sh.Command(paths.MKVMerge, "--version").CombinedOutput()
+	fmt.Printf("Testing mkvmerge\t")
+	_, err = sh.Command(common.MKVMERGE, "--version").CombinedOutput()
 
 	if err != nil {
-		fmt.Printf("FAILED\n")
-		paths.MKVMerge = ""
+		color.Red("✗")
+		failed = true
 	} else {
-		fmt.Printf("SUCCESS\n")
+		color.Green("✓")
 	}
 
 	// Check if any required tool is missing
-	if paths.FFMPEG == "" || paths.FFPROBE == "" || paths.MKVMerge == "" {
-		fmt.Printf("\nffmpeg and ffprobe are required!")
-		os.Exit(1)
+	if failed {
+		fmt.Printf("\nYou have missing programs!\n")
 	}
 
 	fmt.Printf("\n=====================\n\n")
+
+	if failed {
+		os.Exit(1)
+	}
 
 	// Find input files
 	files, err := FindInputs(paths)
@@ -131,9 +133,9 @@ func main() {
 
 	fmt.Printf("=====================\n\n")
 
-	// Extract streams from inputs
-	for i := 0; i < len(files); i++ {
-		err = ExtractStreams(&files[i], paths)
+	// Prepare streams
+	for _, file := range files {
+		err = Prepare(file, paths)
 		if err != nil {
 			tracerr.PrintSourceColor(err)
 			os.Exit(1)
@@ -143,24 +145,24 @@ func main() {
 	fmt.Printf("=====================\n\n")
 
 	// Process streams
-	for i := 0; i < len(files); i++ {
-		err = ProcessStreams(&files[i], paths)
+	for _, file := range files {
+		err = Process(file, paths)
 		if err != nil {
 			tracerr.PrintSourceColor(err)
 			os.Exit(1)
 		}
 	}
 
-	fmt.Printf("=====================\n\n")
+	fmt.Printf("\n=====================\n\n")
 
 	// Merge streams
-	for i := 0; i < len(files); i++ {
-		err = MergeStreams(&files[i], paths)
+	for _, file := range files {
+		err = Merge(file, paths)
 		if err != nil {
 			tracerr.PrintSourceColor(err)
 			os.Exit(1)
 		}
 	}
 
-	fmt.Printf("=====================\n\n")
+	fmt.Printf("\n=====================\n\n")
 }
