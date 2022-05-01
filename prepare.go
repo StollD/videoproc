@@ -16,7 +16,7 @@ import (
 func Prepare(file Input, paths Paths) error {
 	fmt.Printf("Preparing %s/%s.mkv\n\n", file.CFG.Name, file.MKV.Name())
 
-	dir := filepath.Join(paths.Working, file.CFG.Name, file.MKV.Name(), "extract")
+	dir := filepath.Join(paths.Working, file.CFG.Name, file.MKV.Name())
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		return tracerr.Wrap(err)
