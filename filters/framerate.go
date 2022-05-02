@@ -174,7 +174,7 @@ func (audio *SyncedAudioStream) Offset() float64 {
 }
 
 func (audio *SyncedAudioStream) Path() string {
-	return filepath.Join(audio.dir, fmt.Sprintf("%s.fps.mkv", audio.ID()))
+	return filepath.Join(audio.dir, fmt.Sprintf("%s.fps.w64", audio.ID()))
 }
 
 func (audio *SyncedAudioStream) Prepare() error {

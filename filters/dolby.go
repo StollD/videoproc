@@ -63,7 +63,7 @@ func (audio *DolbyAudioStream) Offset() float64 {
 }
 
 func (audio *DolbyAudioStream) Path() string {
-	return filepath.Join(audio.dir, fmt.Sprintf("%s.norm.mkv", audio.ID()))
+	return filepath.Join(audio.dir, fmt.Sprintf("%s.norm.w64", audio.ID()))
 }
 
 func (audio *DolbyAudioStream) Prepare() error {
