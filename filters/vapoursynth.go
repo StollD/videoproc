@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/StollD/videoproc/common"
@@ -58,7 +56,7 @@ func (video *VapoursynthVideoStream) Offset() float64 {
 }
 
 func (video *VapoursynthVideoStream) Path() string {
-	return filepath.Join(video.dir, fmt.Sprintf("%s/%%09d.tiff", video.ID()))
+	return filepath.Join(video.dir, fmt.Sprintf("%s.vpy.mkv", video.ID()))
 }
 
 func (video *VapoursynthVideoStream) Prepare() error {
@@ -94,8 +92,7 @@ func (video *VapoursynthVideoStream) Prepare() error {
 }
 
 func (video *VapoursynthVideoStream) Process() error {
-	done := filepath.Join(video.dir, fmt.Sprintf("%s_vapoursynth_done.txt", video.ID()))
-	if _, err := os.Stat(done); !os.IsNotExist(err) {
+	if _, err := os.Stat(video.Path()); !os.IsNotExist(err) {
 		return nil
 	}
 
@@ -105,57 +102,25 @@ func (video *VapoursynthVideoStream) Process() error {
 		return tracerr.Wrap(err)
 	}
 
+	temp := common.Temp(video.Path())
+
 	fmt.Printf("  Filtering stream %s using %s\t", video.ID(), filepath.Base(video.template))
 
-	err = os.MkdirAll(filepath.Dir(video.Path()), 0755)
-	if err != nil {
-		color.Red("✗")
-		return tracerr.Wrap(err)
-	}
-
-	files, err := filepath.Glob(filepath.Join(filepath.Dir(video.Path()), "*.tiff"))
-	if err != nil {
-		color.Red("✗")
-		return tracerr.Wrap(err)
-	}
-
-	last := -1
-
-	// Determine how many frames have been processed already
-	sort.Strings(files)
-	if len(files) > 0 {
-		lf := filepath.Base(files[len(files)-1])
-		ln, err := strconv.ParseInt(strings.TrimSuffix(lf, ".tiff"), 10, 32)
-		if err != nil {
-			color.Red("✗")
-			return tracerr.Wrap(err)
-		}
-
-		last = int(ln)
-
-		if last != len(files)-1 {
-			color.Red("✗")
-			return tracerr.Errorf("%s has missing frames", video.Path())
-		}
-	}
-
-	ls := fmt.Sprintf("%d", last+1)
-
-	if last >= video.Frames() {
-		_, err := os.Create(done)
-		if err != nil {
-			color.Red("✗")
-			return tracerr.Wrap(err)
-		}
-
-		color.Green("✓")
-		return nil
-	}
-
-	vspipe := sh.Command(common.VSPIPE, video.script, "-", "-c", "y4m", "-s", ls)
+	vspipe := sh.Command(common.VSPIPE, video.script, "-", "-c", "y4m")
 	vspipe.PipeStdErrors = true
 
-	cmd := vspipe.Command(common.FFMPEG, "-i", "pipe:", "-f", "image2", "-start_number", ls, video.Path())
+	args := make([]interface{}, 0)
+	args = append(args, "-r", video.Framerate().String())
+	args = append(args, "-i", "pipe:")
+	args = append(args, "-i", video.base.Path())
+	args = append(args, "-codec", "copy")
+	args = append(args, "-map", "0")
+	args = append(args, "-map_metadata", "1")
+	args = append(args, "-map_chapters", "1")
+	args = append(args, "-aspect", video.Aspect())
+	args = append(args, "-y", temp)
+
+	cmd := vspipe.Command(common.FFMPEG, args...)
 	cmd.Stderr = common.DevNull()
 
 	err = cmd.Run()
@@ -164,12 +129,7 @@ func (video *VapoursynthVideoStream) Process() error {
 		return tracerr.Wrap(err)
 	}
 
-	_, err = os.Create(done)
-	if err != nil {
-		color.Red("✗")
-		return tracerr.Wrap(err)
-	}
-
+	atomic.ReplaceFile(temp, video.Path())
 	color.Green("✓")
 
 	// Cleanup
@@ -182,14 +142,7 @@ func (video *VapoursynthVideoStream) Process() error {
 }
 
 func (video *VapoursynthVideoStream) Cleanup() error {
-	done := filepath.Join(video.dir, fmt.Sprintf("%s_vapoursynth_done.txt", video.ID()))
-
-	err := os.RemoveAll(filepath.Dir(video.Path()))
-	if err != nil {
-		return tracerr.Wrap(err)
-	}
-
-	err = os.Remove(done)
+	err := os.Remove(video.Path())
 	if err != nil {
 		return tracerr.Wrap(err)
 	}
