@@ -82,6 +82,7 @@ func (video *EncodedVideoStream) Process() error {
 	args = append(args, "-r", video.Framerate().String())
 	args = append(args, "-i", video.base.Path())
 	args = append(args, "-map", fmt.Sprintf("0:%d", video.base.Index()))
+	args = append(args, "-aspect", video.Aspect())
 
 	for key, val := range video.codec {
 		if key == "bitrate" {
