@@ -83,7 +83,7 @@ func (video *FramerateVideoStream) Process() error {
 
 	args := make([]interface{}, 0)
 	args = append(args, "-o", temp)
-	args = append(args, "-default-duration", fmt.Sprintf("%d:%sp", video.Index(), video.Framerate().String()))
+	args = append(args, "--default-duration", fmt.Sprintf("%d:%sp", video.Index(), video.Framerate().String()))
 	args = append(args, "--fix-bitstream-timing-information", fmt.Sprintf("%d:true", video.Index()))
 	args = append(args, "--chapter-sync", fmt.Sprintf("0,1/%f", video.RelativeSpeedup()))
 	args = append(args, video.base.Path())
