@@ -96,7 +96,7 @@ func (mkv *MKV) Stream(sel string) (Stream, error) {
 			continue
 		}
 
-		info := mkv.minfo[int(index.(float64))].(map[string]interface{})
+		info := mkv.minfo[int(index.(float64))+1].(map[string]interface{})
 
 		stream := NewBasicStream(mkv.Path(), probe, info)
 
@@ -258,6 +258,8 @@ func (mkv *MKV) Merge(dir string) error {
 
 		if s.Type() == "video" {
 			args = append(args, meta, "language=")
+		} else {
+			args = append(args, meta, fmt.Sprintf("language=%s", s.Language()))
 		}
 	}
 
