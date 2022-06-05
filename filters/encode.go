@@ -223,6 +223,26 @@ func (audio *EncodedAudioStream) Process() error {
 	args = append(args, "-i", audio.base.Path())
 	args = append(args, "-map", fmt.Sprintf("0:%d", audio.base.Index()))
 
+	// Fix for converting ac3 to opus
+	codec, exists := audio.codec["codec"]
+	if codec == "libopus" && exists {
+		af, exists := audio.codec["af"]
+		of := "channelmap=channel_layout=5.1"
+
+		probe := audio.Probe()
+		layout := probe["channel_layout"].(string)
+
+		if layout == "5.1(side)" {
+			if exists {
+				af = af + of
+			} else {
+				af = of
+			}
+
+			audio.codec["af"] = af
+		}
+	}
+
 	for key, val := range audio.codec {
 		if key == "bitrate" {
 			key = "b:a"
