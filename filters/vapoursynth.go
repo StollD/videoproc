@@ -113,7 +113,7 @@ func (video *VapoursynthVideoStream) Process() error {
 	args = append(args, "-r", video.Framerate().String())
 	args = append(args, "-i", "pipe:")
 	args = append(args, "-i", video.base.Path())
-	args = append(args, "-codec", "copy")
+	args = append(args, "-codec", "ffv1")
 	args = append(args, "-map", "0")
 	args = append(args, "-map_metadata", "1")
 	args = append(args, "-map_chapters", "1")
