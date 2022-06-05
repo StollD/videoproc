@@ -234,7 +234,7 @@ func (audio *EncodedAudioStream) Process() error {
 
 		if layout == "5.1(side)" {
 			if exists {
-				af = af + of
+				af = af + "," + of
 			} else {
 				af = of
 			}
@@ -246,6 +246,12 @@ func (audio *EncodedAudioStream) Process() error {
 	for key, val := range audio.codec {
 		if key == "bitrate" {
 			key = "b:a"
+
+			probe := audio.Probe()
+			channels := probe["channels"].(float64)
+
+			// ffmpeg supports -b:a "2*64k" == 128k
+			val = fmt.Sprintf("%d*%s", int(channels), val)
 		}
 
 		// Apply values from Mediainfos extra data to the codec
