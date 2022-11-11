@@ -1,0 +1,16 @@
+[package]
+name = "videoproc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+argparse = "0.2.2"
+execute = "0.2.11"
+fnmatch-regex = "0.2.0"
+json = "0.12.4"
+slog = "2.7.0"
+slog-async = "2.7.0"
+slog-scope = "4.4.0"
+slog-stdlog = "4.1.1"
+slog-term = "2.9.0"
+tempdir = "0.3.7"
