@@ -4,7 +4,7 @@ use execute::Execute;
 use json::JsonValue;
 use tempdir::TempDir;
 
-use crate::{logging, mkv};
+use crate::{logging, mkv, utils::StrVec};
 
 pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<mkv::Stream, ()> {
 	if !options.has_key("codec") {
@@ -19,22 +19,22 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 
 	let mut args = Vec::<String>::new();
 
-	args.push("-i".to_string());
+	args.push_str("-i");
 	args.push(stream.path.to_str().unwrap().to_string());
 
 	let map = format!("0:{}", stream.index);
-	args.push("-map".to_string());
+	args.push_str("-map");
 	args.push(map);
 
 	if stream.aspect.is_some() {
-		args.push("-aspect".to_string());
+		args.push_str("-aspect");
 		args.push(stream.aspect.as_ref().unwrap().clone());
 	}
 
 	if codec == "ac3" {
 		let dsurmode = stream.dsurmode.map(|d| d.to_string());
 		if let Some(dsurmode) = dsurmode {
-			args.push("-dsur_mode".to_string());
+			args.push_str("-dsur_mode");
 			args.push(dsurmode);
 		}
 	}
@@ -69,15 +69,15 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 
 		let mut p1 = args.clone();
 
-		p1.push("-pass".to_string());
-		p1.push("1".to_string());
+		p1.push_str("-pass");
+		p1.push_str("1");
 
-		p1.push("-passlogfile".to_string());
-		p1.push(log.to_str().unwrap().to_string());
+		p1.push_str("-passlogfile");
+		p1.push_str(log.to_str().unwrap());
 
-		p1.push("-f".to_string());
-		p1.push("null".to_string());
-		p1.push("-".to_string());
+		p1.push_str("-f");
+		p1.push_str("null");
+		p1.push_str("-");
 
 		let cmd = Command::new("ffmpeg")
 			.args(p1)
@@ -90,14 +90,14 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 
 		let mut p2 = args.clone();
 
-		p2.push("-pass".to_string());
-		p2.push("2".to_string());
+		p2.push_str("-pass");
+		p2.push_str("2");
 
-		p2.push("-passlogfile".to_string());
-		p2.push(log.to_str().unwrap().to_string());
+		p2.push_str("-passlogfile");
+		p2.push_str(log.to_str().unwrap());
 
-		p2.push("-y".to_string());
-		p2.push(path.to_str().unwrap().to_string());
+		p2.push_str("-y");
+		p2.push_str(path.to_str().unwrap());
 
 		let cmd = Command::new("ffmpeg")
 			.args(p2)
@@ -108,8 +108,8 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 			return Err(());
 		}
 	} else {
-		args.push("-y".to_string());
-		args.push(path.to_str().unwrap().to_string());
+		args.push_str("-y");
+		args.push_str(path.to_str().unwrap());
 
 		let cmd = Command::new("ffmpeg")
 			.args(args)

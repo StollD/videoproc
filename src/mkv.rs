@@ -3,7 +3,7 @@ use json::object;
 
 use crate::{
 	logging,
-	utils::{self, framerate},
+	utils::{self, framerate, StrVec},
 };
 use std::{
 	io,
@@ -460,10 +460,10 @@ pub fn write(streams: &Vec<Stream>, path: &Path) -> Result<(), ()> {
 		if stream.streamtype == "chapters" {
 			chapters.push(stream);
 		} else {
-			args.push("-itsoffset".to_string());
+			args.push_str("-itsoffset");
 			args.push(format!("{}s", &stream.offset));
 
-			args.push("-i".to_string());
+			args.push_str("-i");
 			args.push(stream.path.to_str().unwrap().to_string());
 
 			choffset = choffset.min(stream.offset);
@@ -479,37 +479,37 @@ pub fn write(streams: &Vec<Stream>, path: &Path) -> Result<(), ()> {
 			offset -= choffset
 		}
 
-		args.push("-itsoffset".to_string());
+		args.push_str("-itsoffset");
 		args.push(format!("{}s", offset));
 
-		args.push("-i".to_string());
+		args.push_str("-i");
 		args.push(chap.path.to_str().unwrap().to_string());
 	}
 
 	for (i, stream) in streams.iter().enumerate() {
 		if stream.streamtype == "chapters" {
-			args.push("-map_chapters".to_string());
+			args.push_str("-map_chapters");
 			args.push(i.to_string());
 			continue;
 		}
 
-		args.push("-map".to_string());
+		args.push_str("-map");
 		args.push(format!("{}:{}", i, stream.index));
 
 		// Unset some metadata
 		let meta = format!("-metadata:s:{}", i);
 		args.push(meta.clone());
-		args.push("title=".to_string());
+		args.push_str("title=");
 		args.push(meta.clone());
-		args.push("SOURCE_ID=".to_string());
+		args.push_str("SOURCE_ID=");
 		args.push(meta.clone());
-		args.push("ENCODER=".to_string());
+		args.push_str("ENCODER=");
 
 		args.push(meta.clone());
 
 		// Set language metadata
 		if stream.streamtype == "video" {
-			args.push("language=".to_string());
+			args.push_str("language=");
 		} else {
 			args.push(format!(
 				"language={}",
@@ -518,20 +518,20 @@ pub fn write(streams: &Vec<Stream>, path: &Path) -> Result<(), ()> {
 		}
 	}
 
-	args.push("-codec".to_string());
-	args.push("copy".to_string());
+	args.push_str("-codec");
+	args.push_str("copy");
 
-	args.push("-disposition".to_string());
-	args.push("0".to_string());
+	args.push_str("-disposition");
+	args.push_str("0");
 
-	args.push("-disposition:a:0".to_string());
-	args.push("default".to_string());
+	args.push_str("-disposition:a:0");
+	args.push_str("default");
 
-	args.push("-metadata".to_string());
-	args.push("title=".to_string());
+	args.push_str("-metadata");
+	args.push_str("title=");
 
-	args.push("-y".to_string());
-	args.push(temp.to_str().unwrap().to_string());
+	args.push_str("-y");
+	args.push_str(temp.to_str().unwrap());
 
 	let cmd = Command::new("ffmpeg")
 		.args(args)

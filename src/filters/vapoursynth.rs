@@ -103,10 +103,7 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 		return Err(());
 	}
 
-	let probe = Command::new("vspipe")
-		.arg("-i")
-		.arg(&script)
-		.output();
+	let probe = Command::new("vspipe").arg("-i").arg(&script).output();
 
 	if let Err(err) = probe {
 		logging::error!("Failed to run vspipe: {}", err);

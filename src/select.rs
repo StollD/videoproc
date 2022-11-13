@@ -65,7 +65,7 @@ fn check_match(cfg: &JsonValue, stream: &mkv::Stream) -> bool {
 		for entry in cfg["file"].members() {
 			let regex = fnmatch_regex::glob_to_regex(format!("*{}*", entry).as_str());
 			if regex.is_err() {
-				continue
+				continue;
 			}
 
 			let regex = regex.unwrap();

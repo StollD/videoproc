@@ -4,7 +4,7 @@ use json::JsonValue;
 
 use crate::{logging, mkv, utils};
 
-use super::{dolby, encode, extract, offset, speed, vapoursynth, avisynth};
+use super::{avisynth, dolby, encode, extract, offset, speed, vapoursynth};
 
 pub fn run(cfg: &JsonValue, stream: &mkv::Stream, working: &Path) -> Result<mkv::Stream, ()> {
 	let filters = &cfg["filters"];
@@ -66,14 +66,11 @@ pub fn run(cfg: &JsonValue, stream: &mkv::Stream, working: &Path) -> Result<mkv:
 				})?;
 			}
 
-
 			if name == "avisynth" {
 				let filter = PathBuf::from(filter["filter"].to_string());
 
 				stage += 1;
-				current = run_stage(&current, &dir, stage, |s, o| {
-					avisynth::run(s, o, &filter)
-				})?;
+				current = run_stage(&current, &dir, stage, |s, o| avisynth::run(s, o, &filter))?;
 			}
 
 			if name == "speed" {

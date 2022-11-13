@@ -49,3 +49,13 @@ pub fn check_output(
 
 	Ok(cmd)
 }
+
+pub trait StrVec {
+	fn push_str(&mut self, value: &str);
+}
+
+impl StrVec for Vec<String> {
+	fn push_str(&mut self, value: &str) {
+		self.push(String::from(value));
+	}
+}

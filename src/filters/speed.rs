@@ -2,7 +2,10 @@ use std::{path::Path, process::Command};
 
 use execute::Execute;
 
-use crate::{logging, mkv, utils};
+use crate::{
+	logging, mkv,
+	utils::{self, StrVec},
+};
 
 pub fn change_video(
 	stream: &mkv::Stream,
@@ -14,20 +17,18 @@ pub fn change_video(
 
 	logging::info!("Changing speed by {}", speedup);
 
-	let mut args = Vec::<&str>::new();
+	let mut args = Vec::<String>::new();
 
-	args.push("-o");
-	args.push(path.to_str().unwrap());
+	args.push_str("-o");
+	args.push_str(path.to_str().unwrap());
 
-	let duration = format!("{}:{}/{}p", stream.index, framerate.0, framerate.1);
-	args.push("--default-duration");
-	args.push(&duration);
+	args.push_str("--default-duration");
+	args.push(format!("{}:{}/{}p", stream.index, framerate.0, framerate.1));
 
-	let timing = format!("{}:true", stream.index);
-	args.push("--fix-bitstream-timing-information");
-	args.push(&timing);
+	args.push_str("--fix-bitstream-timing-information");
+	args.push(format!("{}:true", stream.index));
 
-	args.push(stream.path.to_str().unwrap());
+	args.push_str(stream.path.to_str().unwrap());
 
 	let cmd = Command::new("mkvmerge")
 		.args(args)
@@ -59,14 +60,13 @@ pub fn change_audio(
 
 	logging::info!("Changing speed by {}", speedup);
 
-	let mut args = Vec::<&str>::new();
+	let mut args = Vec::<String>::new();
 
-	args.push("-i");
-	args.push(stream.path.to_str().unwrap());
+	args.push_str("-i");
+	args.push_str(stream.path.to_str().unwrap());
 
-	let map = format!("0:{}", stream.index);
-	args.push("-map");
-	args.push(&map);
+	args.push_str("-map");
+	args.push(format!("0:{}", stream.index));
 
 	// Convert audio to original speed (no pitch correction)
 	let asetrate = utils::speedup(infps, recfps);
@@ -80,21 +80,20 @@ pub fn change_audio(
 		asetrate,
 		atempo
 	);
-	args.push("-af");
-	args.push(&af);
+	args.push_str("-af");
+	args.push(af);
 
-	let samplerate = stream.samplerate.unwrap().to_string();
-	args.push("-ar");
-	args.push(&samplerate);
+	args.push_str("-ar");
+	args.push(format!("{}", stream.samplerate.unwrap()));
 
-	args.push("-resampler");
-	args.push("soxr");
+	args.push_str("-resampler");
+	args.push_str("soxr");
 
-	args.push("-codec");
-	args.push("pcm_f32le");
+	args.push_str("-codec");
+	args.push_str("pcm_f32le");
 
-	args.push("-y");
-	args.push(path.to_str().unwrap());
+	args.push_str("-y");
+	args.push_str(path.to_str().unwrap());
 
 	let cmd = Command::new("ffmpeg")
 		.args(args)
@@ -126,24 +125,22 @@ pub fn change_subtitles(
 
 	logging::info!("Changing speed by {}", speedup);
 
-	let mut args = Vec::<&str>::new();
+	let mut args = Vec::<String>::new();
 
-	args.push("-i");
-	args.push(stream.path.to_str().unwrap());
+	args.push_str("-i");
+	args.push_str(stream.path.to_str().unwrap());
 
-	let map = format!("0:{}", stream.index);
-	args.push("-map");
-	args.push(&map);
+	args.push_str("-map");
+	args.push(format!("0:{}", stream.index));
 
-	let bsf = format!("setts=TS/{}", speedup);
-	args.push("-bsf");
-	args.push(&bsf);
+	args.push_str("-bsf");
+	args.push(format!("setts=TS/{}", speedup));
 
-	args.push("-codec");
-	args.push("copy");
+	args.push_str("-codec");
+	args.push_str("copy");
 
-	args.push("-y");
-	args.push(path.to_str().unwrap());
+	args.push_str("-y");
+	args.push_str(path.to_str().unwrap());
 
 	let cmd = Command::new("ffmpeg")
 		.args(args)
