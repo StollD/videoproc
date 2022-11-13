@@ -69,6 +69,11 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 
 		let mut p1 = args.clone();
 
+		if codec == "libx265" || codec == "hevc" {
+			p1.push_str("-x265-params");
+			p1.push(format!("pass=1:stats=\"{}-{}.x265.log\"", log.to_str().unwrap(), stream.index));
+		}
+
 		p1.push_str("-pass");
 		p1.push_str("1");
 
@@ -89,6 +94,11 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 		}
 
 		let mut p2 = args.clone();
+
+		if codec == "libx265" || codec == "hevc" {
+			p2.push_str("-x265-params");
+			p2.push(format!("pass=2:stats=\"{}-{}.x265.log\"", log.to_str().unwrap(), stream.index));
+		}
 
 		p2.push_str("-pass");
 		p2.push_str("2");
