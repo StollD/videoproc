@@ -59,6 +59,36 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 		template = template.replace("$(d2v)$", d2v.to_str().unwrap());
 	}
 
+	// Is this a two pass script?
+	if template.contains("$(pass)$") {
+		let script = script.with_extension("pass1.vpy");
+		let p1 = template.replace("$(pass)$", "1");
+
+		let err = std::fs::write(&script, p1);
+		if let Err(err) = err {
+			logging::error!("Failed to write vapoursynth script: {}", err);
+			return Err(());
+		}
+
+		let vspipe = Command::new("vspipe")
+			.arg(script.to_str().unwrap())
+			.arg("-")
+			.execute_check_exit_status_code(0);
+
+		if let Err(err) = vspipe {
+			logging::error!("Failed to run vspipe: {}", err);
+			return Err(());
+		}
+
+		let err = std::fs::remove_file(script);
+		if let Err(err) = err {
+			logging::error!("Failed to remove file: {}", err);
+			return Err(());
+		}
+
+		template = template.replace("$(pass)$", "2");
+	}
+
 	let err = std::fs::write(&script, template);
 	if let Err(err) = err {
 		logging::error!("Failed to write vapoursynth script: {}", err);
