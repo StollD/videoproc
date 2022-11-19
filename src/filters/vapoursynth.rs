@@ -135,7 +135,7 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 		}
 
 		if split[0] == "FPS" {
-			let split = split[1].split(' ').collect::<Vec<&str>>();
+			let split = split[1].trim().split(' ').collect::<Vec<&str>>();
 			framerate = utils::framerate(split[0]);
 		}
 	}
