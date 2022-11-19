@@ -71,8 +71,8 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 		}
 
 		let avspipe = Command::new("avs2pipemod64")
-		.arg("-y4mp")
-		.arg(script.to_str().unwrap())
+			.arg("-y4mp")
+			.arg(script.to_str().unwrap())
 			.execute_check_exit_status_code(0);
 
 		if let Err(err) = avspipe {
