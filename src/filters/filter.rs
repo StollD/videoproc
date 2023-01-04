@@ -24,10 +24,18 @@ pub fn run(cfg: &JsonValue, stream: &mkv::Stream, working: &Path) -> Result<mkv:
 	let mut stage = 1;
 	let mut current = run_stage(stream, &dir, stage, extract::run)?;
 
-	// Normalize Dolby audio
-	if current.codec.as_deref() == Some("ac3") {
-		stage += 1;
-		current = run_stage(&current, &dir, stage, dolby::normalize)?;
+	// Normalize Dolby audio, unless the stream is copied
+	for filter in filters.members() {
+		let name = &filter["$type"];
+
+		if name == "encode" {
+			let newcodec = &filter["codec"];
+
+			if current.codec.as_deref() == Some("ac3") && newcodec != "copy" {
+				stage += 1;
+				current = run_stage(&current, &dir, stage, dolby::normalize)?;
+			}
+		}
 	}
 
 	// Run other filters
