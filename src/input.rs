@@ -118,9 +118,10 @@ fn process_item(cfg: &JsonValue, path: &Path, working: &Path, output: &Path) -> 
 	for entry in streams {
 		let cfg = entry.0;
 		let stream = entry.1;
+		let wdir = stream.path.parent().unwrap();
 
 		let stream = logging::scope("stream", &stream.id, || {
-			filters::run(&cfg, &stream, working)
+			filters::run(&cfg, &stream, wdir)
 		})?;
 		processed.push(stream);
 	}
