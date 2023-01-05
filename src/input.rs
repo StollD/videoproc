@@ -116,11 +116,12 @@ fn process_item(cfg: &JsonValue, path: &Path, working: &Path, output: &Path) -> 
 
 	// Run processing filters
 	for entry in streams {
-		let cfg = entry.0;
-		let stream = entry.1;
+		let name = entry.0;
+		let cfg = entry.1;
+		let stream = entry.2;
 		let wdir = stream.path.parent().unwrap();
 
-		let stream = logging::scope("stream", &stream.id, || {
+		let stream = logging::scope("stream", format!("{} ({})", name, stream.id).as_str(), || {
 			filters::run(&cfg, &stream, wdir)
 		})?;
 		processed.push(stream);

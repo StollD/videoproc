@@ -5,8 +5,8 @@ use crate::{logging, mkv, utils};
 pub fn find(
 	cfg: &JsonValue,
 	streams: &Vec<mkv::Stream>,
-) -> Result<Vec<(JsonValue, mkv::Stream)>, ()> {
-	let mut new = Vec::<(JsonValue, mkv::Stream)>::new();
+) -> Result<Vec<(String, JsonValue, mkv::Stream)>, ()> {
+	let mut new = Vec::<(String, JsonValue, mkv::Stream)>::new();
 
 	for entry in cfg.entries() {
 		let name = String::from(entry.0);
@@ -18,12 +18,13 @@ pub fn find(
 			return Err(());
 		}
 
-		new.push(m.unwrap());
+		let (j, s) = m.unwrap();
+		new.push((name, j, s));
 	}
 
 	new.sort_by(|a, b| {
-		let x = utils::streampriority(&a.1);
-		let y = utils::streampriority(&b.1);
+		let x = utils::streampriority(&a.2);
+		let y = utils::streampriority(&b.2);
 
 		x.cmp(&y)
 	});
