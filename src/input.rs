@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+	io,
+	path::{Path, PathBuf},
+};
 
 use crate::{config, filters, logging, mkv, select};
 use json::JsonValue;
@@ -47,8 +50,15 @@ fn process_dir(cfg: &JsonValue, dir: &Path, working: &Path, output: &Path) -> Re
 		return Err(());
 	}
 
-	for entry in std::fs::read_dir(dir).expect("read_dir failed") {
-		let path = entry.unwrap().path();
+	let files = files.unwrap();
+	let mut files = files
+		.map(|res| res.map(|e| e.path()))
+		.collect::<Result<Vec<_>, io::Error>>()
+		.unwrap();
+
+	files.sort();
+
+	for path in files {
 		let ext = path.extension().unwrap_or_default();
 
 		// We only care about mkv files and directories
@@ -121,9 +131,11 @@ fn process_item(cfg: &JsonValue, path: &Path, working: &Path, output: &Path) -> 
 		let stream = entry.2;
 		let wdir = stream.path.parent().unwrap();
 
-		let stream = logging::scope("stream", format!("{} ({})", name, stream.id).as_str(), || {
-			filters::run(&cfg, &stream, wdir)
-		})?;
+		let stream = logging::scope(
+			"stream",
+			format!("{} ({})", name, stream.id).as_str(),
+			|| filters::run(&cfg, &stream, wdir),
+		)?;
 		processed.push(stream);
 	}
 
