@@ -4,7 +4,7 @@ use json::JsonValue;
 
 use crate::{logging, mkv, utils};
 
-use super::{avisynth, dolby, encode, extract, offset, speed, vapoursynth};
+use super::{avisynth, dolby, encode, extract, offset, speed, vapoursynth, tempo, pitch};
 
 pub fn run(cfg: &JsonValue, stream: &mkv::Stream, working: &Path) -> Result<mkv::Stream, ()> {
 	let filters = &cfg["filters"];
@@ -98,39 +98,79 @@ pub fn run(cfg: &JsonValue, stream: &mkv::Stream, working: &Path) -> Result<mkv:
 		}
 
 		if current.streamtype == "audio" && name == "speed" {
-			let infps = &filter["inputfps"];
+			let infps = &filter["input"];
 			if infps.is_null() {
 				logging::error!("Missing input framerate!");
 				return Err(());
 			}
 
-			let outfps = &filter["outputfps"];
+			let outfps = &filter["output"];
 			if outfps.is_null() {
 				logging::error!("Missing output framerate!");
 				return Err(());
 			}
 
-			let recfps = &filter["recordfps"];
-			let recfps = if recfps.is_null() { infps } else { recfps };
-
 			let infps = utils::framerate(infps.as_str().unwrap());
-			let recfps = utils::framerate(recfps.as_str().unwrap());
 			let outfps = utils::framerate(outfps.as_str().unwrap());
 
 			stage += 1;
 			current = run_stage(&current, &dir, stage, |s, o| {
-				speed::change_audio(s, o, infps, recfps, outfps)
+				speed::change_audio(s, o, infps, outfps)
 			})?;
 		}
 
-		if current.streamtype == "subtitle" && name == "speed" {
-			let infps = &filter["inputfps"];
+		if current.streamtype == "audio" && name == "tempo" {
+			let infps = &filter["input"];
 			if infps.is_null() {
 				logging::error!("Missing input framerate!");
 				return Err(());
 			}
 
-			let outfps = &filter["outputfps"];
+			let outfps = &filter["output"];
+			if outfps.is_null() {
+				logging::error!("Missing output framerate!");
+				return Err(());
+			}
+
+			let infps = utils::framerate(infps.as_str().unwrap());
+			let outfps = utils::framerate(outfps.as_str().unwrap());
+
+			stage += 1;
+			current = run_stage(&current, &dir, stage, |s, o| {
+				tempo::change(s, o, infps, outfps)
+			})?;
+		}
+
+		if current.streamtype == "audio" && name == "pitch" {
+			let infps = &filter["input"];
+			if infps.is_null() {
+				logging::error!("Missing input framerate!");
+				return Err(());
+			}
+
+			let outfps = &filter["output"];
+			if outfps.is_null() {
+				logging::error!("Missing output framerate!");
+				return Err(());
+			}
+
+			let infps = utils::framerate(infps.as_str().unwrap());
+			let outfps = utils::framerate(outfps.as_str().unwrap());
+
+			stage += 1;
+			current = run_stage(&current, &dir, stage, |s, o| {
+				pitch::change(s, o, infps, outfps)
+			})?;
+		}
+
+		if current.streamtype == "subtitle" && name == "speed" {
+			let infps = &filter["input"];
+			if infps.is_null() {
+				logging::error!("Missing input framerate!");
+				return Err(());
+			}
+
+			let outfps = &filter["output"];
 			if outfps.is_null() {
 				logging::error!("Missing output framerate!");
 				return Err(());
@@ -146,13 +186,13 @@ pub fn run(cfg: &JsonValue, stream: &mkv::Stream, working: &Path) -> Result<mkv:
 		}
 
 		if current.streamtype == "chapters" && name == "speed" {
-			let infps = &filter["inputfps"];
+			let infps = &filter["input"];
 			if infps.is_null() {
 				logging::error!("Missing input framerate!");
 				return Err(());
 			}
 
-			let outfps = &filter["outputfps"];
+			let outfps = &filter["output"];
 			if outfps.is_null() {
 				logging::error!("Missing output framerate!");
 				return Err(());

@@ -52,7 +52,6 @@ pub fn change_audio(
 	stream: &mkv::Stream,
 	output: &Path,
 	infps: (u32, u32),
-	recfps: (u32, u32),
 	outfps: (u32, u32),
 ) -> Result<mkv::Stream, ()> {
 	let speedup = utils::speedup(infps, outfps);
@@ -68,17 +67,10 @@ pub fn change_audio(
 	args.push_str("-map");
 	args.push(format!("0:{}", stream.index));
 
-	// Convert audio to original speed (no pitch correction)
-	let asetrate = utils::speedup(infps, recfps);
-
-	// Convert audio to target speed (with pitch correction)
-	let atempo = utils::speedup(recfps, outfps);
-
 	let af = format!(
-		"asetrate={}*{},aresample,atempo={}",
+		"asetrate={}*{},aresample",
 		stream.samplerate.unwrap(),
-		asetrate,
-		atempo
+		speedup
 	);
 	args.push_str("-af");
 	args.push(af);
