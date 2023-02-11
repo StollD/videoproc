@@ -41,13 +41,25 @@ pub fn run(cfg: &JsonValue, stream: &mkv::Stream, working: &Path) -> Result<mkv:
 	// Run other filters
 	for filter in filters.members() {
 		let name = &filter["$type"];
-		let item = String::from(working.file_name().unwrap().to_str().unwrap());
+		let path = String::from(working.to_str().unwrap());
 
 		if name == "offset" {
-			let secs = filter[item].as_str().unwrap_or("0.0").parse::<f32>();
-			if let Err(err) = secs {
-				logging::error!("Failed to parse offset: {}", err);
-				return Err(());
+			let mut secs = Ok(0.0);
+
+			for entry in filter.entries() {
+				let key = entry.0;
+				let value = entry.1;
+
+				let regex = fnmatch_regex::glob_to_regex(format!("*{key}*").as_str());
+				if regex.is_err() {
+					continue;
+				}
+
+				let regex = regex.unwrap();
+				if regex.is_match(&path) {
+					secs = value.as_str().unwrap_or("0.0").parse::<f32>();
+					break;
+				}
 			}
 
 			stage += 1;
