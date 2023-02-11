@@ -232,7 +232,7 @@ fn run_stage<F>(
 where
 	F: FnOnce(&mkv::Stream, &Path) -> Result<mkv::Stream, ()>,
 {
-	let dir = working.join(format!("Stage{}", stage));
+	let dir = working.join(format!("Stage{stage}"));
 
 	let err = std::fs::create_dir_all(&dir);
 	if let Err(err) = err {

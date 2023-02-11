@@ -352,7 +352,7 @@ pub fn stream(file: &Path, index: u32) -> Result<Stream, ()> {
 		let id = if tags.has_key("SOURCE_ID") {
 			tags["SOURCE_ID"].to_string()
 		} else {
-			format!("{}:{}", streamtype, index)
+			format!("{streamtype}:{index}")
 		};
 
 		let language = if tags.has_key("language") {
@@ -480,7 +480,7 @@ pub fn write(streams: &Vec<Stream>, path: &Path) -> Result<(), ()> {
 		}
 
 		args.push_str("-itsoffset");
-		args.push(format!("{}s", offset));
+		args.push(format!("{offset}s"));
 
 		args.push_str("-i");
 		args.push(chap.path.to_str().unwrap().to_string());
@@ -497,7 +497,7 @@ pub fn write(streams: &Vec<Stream>, path: &Path) -> Result<(), ()> {
 		args.push(format!("{}:{}", i, stream.index));
 
 		// Unset some metadata
-		let meta = format!("-metadata:s:{}", i);
+		let meta = format!("-metadata:s:{i}");
 		args.push(meta.clone());
 		args.push_str("title=");
 		args.push(meta.clone());

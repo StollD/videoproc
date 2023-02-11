@@ -26,7 +26,7 @@ pub fn change(
 	args.push_str("-map");
 	args.push(format!("0:{}", stream.index));
 
-	let af = format!("atempo={}", speedup,);
+	let af = format!("atempo={speedup}");
 	args.push_str("-af");
 	args.push(af);
 

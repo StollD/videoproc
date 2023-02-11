@@ -126,7 +126,7 @@ pub fn change_subtitles(
 	args.push(format!("0:{}", stream.index));
 
 	args.push_str("-bsf");
-	args.push(format!("setts=TS/{}", speedup));
+	args.push(format!("setts=TS/{speedup}"));
 
 	args.push_str("-codec");
 	args.push_str("copy");
@@ -182,7 +182,7 @@ pub fn change_chapters(
 			let num = tb.0;
 			let den = (tb.1 as f32 * speedup).round() as u32;
 
-			new.push_str(format!("TIMEBASE={}/{}", num, den).as_str());
+			new.push_str(format!("TIMEBASE={num}/{den}").as_str());
 		} else {
 			new.push_str(line);
 		}

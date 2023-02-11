@@ -52,7 +52,7 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 			}
 		}
 
-		args.push(format!("-{}", key));
+		args.push(format!("-{key}"));
 		args.push(val);
 	}
 
