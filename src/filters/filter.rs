@@ -4,7 +4,7 @@ use json::JsonValue;
 
 use crate::{logging, mkv, utils};
 
-use super::{avisynth, dolby, encode, extract, offset, speed, vapoursynth, tempo, pitch};
+use super::{avisynth, dolby, encode, extract, offset, pitch, speed, tempo, vapoursynth};
 
 pub fn run(cfg: &JsonValue, stream: &mkv::Stream, working: &Path) -> Result<mkv::Stream, ()> {
 	let filters = &cfg["filters"];
