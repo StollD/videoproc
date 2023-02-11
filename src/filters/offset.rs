@@ -3,7 +3,7 @@ use std::path::Path;
 use crate::{logging, mkv};
 
 pub fn change(stream: &mkv::Stream, output: &Path, seconds: f32) -> Result<mkv::Stream, ()> {
-	logging::info!("Changing offset of stream {} by {}s", stream.id, seconds);
+	logging::info!("Changing offset of stream {} to {}s", stream.id, seconds);
 
 	let path = output.join(&stream.id).with_extension(format!(
 		"offset.{}",
@@ -18,7 +18,7 @@ pub fn change(stream: &mkv::Stream, output: &Path, seconds: f32) -> Result<mkv::
 
 	let mut new = stream.clone();
 	new.path = path;
-	new.offset += seconds;
+	new.offset = seconds;
 
 	Ok(new)
 }
