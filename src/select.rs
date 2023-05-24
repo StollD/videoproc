@@ -14,6 +14,10 @@ pub fn find(
 
 		let m = find_match(streamcfg, streams);
 		if m.is_none() {
+			if is_optional(streamcfg, streams) {
+				continue;
+			}
+
 			logging::error!("Could not find match for stream {}", name);
 			return Err(());
 		}
@@ -32,6 +36,28 @@ pub fn find(
 	Ok(new)
 }
 
+fn is_optional(cfg: &JsonValue, streams: &Vec<mkv::Stream>) -> bool {
+	for option in cfg.members() {
+		let mut found = true;
+
+		if option["missing"] != true {
+			continue;
+		}
+
+		for stream in streams {
+			if !check_file(option, stream) {
+				found = false
+			}
+		}
+
+		if found {
+			return true;
+		}
+	}
+
+	false
+}
+
 fn find_match(cfg: &JsonValue, streams: &Vec<mkv::Stream>) -> Option<(JsonValue, mkv::Stream)> {
 	for option in cfg.members() {
 		for stream in streams {
@@ -47,6 +73,10 @@ fn find_match(cfg: &JsonValue, streams: &Vec<mkv::Stream>) -> Option<(JsonValue,
 }
 
 fn check_match(cfg: &JsonValue, stream: &mkv::Stream) -> bool {
+	if cfg["missing"] == true {
+		return false
+	}
+
 	if cfg.has_key("type") && cfg["type"] != stream.streamtype.as_str() {
 		return false;
 	}
@@ -59,26 +89,28 @@ fn check_match(cfg: &JsonValue, stream: &mkv::Stream) -> bool {
 		return false;
 	}
 
-	if cfg.has_key("file") {
-		let mut m = false;
-		let path = stream.path.to_str().unwrap_or_default().to_string();
+	check_file(cfg, stream)
+}
 
-		for entry in cfg["file"].members() {
-			let regex = fnmatch_regex::glob_to_regex(format!("*{entry}*").as_str());
-			if regex.is_err() {
-				continue;
-			}
+fn check_file(cfg: &JsonValue, stream: &mkv::Stream) -> bool {
+	if !cfg.has_key("file") {
+		return true;
+	}
 
-			let regex = regex.unwrap();
-			if regex.is_match(&path) {
-				m = true;
-			}
+	let mut m = false;
+	let path = stream.path.to_str().unwrap_or_default().to_string();
+
+	for entry in cfg["file"].members() {
+		let regex = fnmatch_regex::glob_to_regex(format!("*{entry}*").as_str());
+		if regex.is_err() {
+			continue;
 		}
 
-		if !m {
-			return false;
+		let regex = regex.unwrap();
+		if regex.is_match(&path) {
+			m = true;
 		}
 	}
 
-	true
+	m
 }
