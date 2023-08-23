@@ -45,10 +45,18 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 			return Err(());
 		}
 
-		let cmd = Command::new("d2vwitch")
-			.arg("--output")
-			.arg(d2v.to_str().unwrap())
-			.arg(mpg.to_str().unwrap())
+		let mpg_name = mpg.file_name().unwrap();
+		let project = d2v.with_extension("");
+		let project_name = project.file_name().unwrap();
+
+		let cmd = Command::new("DGIndex")
+			.current_dir(mpg.parent().unwrap())
+			.arg("-i")
+			.arg(mpg_name.to_str().unwrap())
+			.arg("-o")
+			.arg(project_name.to_str().unwrap())
+			.arg("-exit")
+			.arg("-hide")
 			.execute_check_exit_status_code(0);
 
 		if let Err(err) = cmd {
