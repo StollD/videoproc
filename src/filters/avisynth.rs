@@ -32,8 +32,8 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 	template = template.replace("$(mkv)$", stream.path.to_str().unwrap());
 	template = template.replace("$(avs)$", filter.to_str().unwrap());
 
-	// If requested create a D2V Index for MPEG2 streams
-	if template.contains("$(d2v)$") {
+	// If requested extract the MPEG-2 stream
+	if template.contains("$(d2v)$") || template.contains("$(mpg)$") {
 		let cmd = Command::new("mkvextract")
 			.arg(stream.path.to_str().unwrap())
 			.arg("tracks")
@@ -45,6 +45,11 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 			return Err(());
 		}
 
+		template = template.replace("$(mpg)$", mpg.to_str().unwrap());
+	}
+
+	// If requested create a D2V Index for MPEG2 streams
+	if template.contains("$(d2v)$") {
 		let mpg_name = mpg.file_name().unwrap();
 		let project = d2v.with_extension("");
 		let project_name = project.file_name().unwrap();
