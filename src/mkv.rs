@@ -352,7 +352,7 @@ pub fn stream(file: &Path, index: u32) -> Result<Stream, ()> {
 		let id = if tags.has_key("SOURCE_ID") {
 			tags["SOURCE_ID"].to_string()
 		} else {
-			format!("{streamtype}:{index}")
+			format!("{streamtype}{index}")
 		};
 
 		let language = if tags.has_key("language") {
