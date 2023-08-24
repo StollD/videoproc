@@ -39,12 +39,23 @@ fn extract_stream(stream: &mkv::Stream, output: &Path) -> Result<mkv::Stream, ()
 			.arg(&path)
 			.arg(&idx)
 			.arg(&sub)
-			.execute_check_exit_status_code(0);
+			.execute();
 
 		if let Err(err) = cmd {
 			logging::error!("Failed to create MKV: {}", err);
 			return Err(());
 		}
+
+		let cmd = cmd.unwrap();
+
+		match cmd {
+			Some(0) => {},
+			Some(1) => {},
+			_ => {
+				logging::error!("Failed to create MKV: unexpected exit code");
+				return Err(());
+			}
+		};
 
 		let err = std::fs::remove_file(&idx);
 		if let Err(err) = err {
@@ -62,12 +73,23 @@ fn extract_stream(stream: &mkv::Stream, output: &Path) -> Result<mkv::Stream, ()
 			.arg("-o")
 			.arg(&path)
 			.arg(&raw)
-			.execute_check_exit_status_code(0);
+			.execute();
 
 		if let Err(err) = cmd {
 			logging::error!("Failed to create MKV: {}", err);
 			return Err(());
 		}
+
+		let cmd = cmd.unwrap();
+
+		match cmd {
+			Some(0) => {},
+			Some(1) => {},
+			_ => {
+				logging::error!("Failed to create MKV: unexpected exit code");
+				return Err(());
+			}
+		};
 
 		let err = std::fs::remove_file(&raw);
 		if let Err(err) = err {
