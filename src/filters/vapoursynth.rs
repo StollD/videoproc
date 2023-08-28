@@ -14,7 +14,7 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 	}
 
 	let name = filter.file_stem().unwrap().to_str().unwrap();
-	logging::info!("Filtering stream using {}", name);
+	logging::info!("Filtering stream using VapourSynth filter {}", name);
 
 	let script = output.join(format!("{}.{}.vpy", stream.id, name));
 	let path = script.with_extension("vpy.mkv");
