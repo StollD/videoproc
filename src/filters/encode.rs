@@ -39,23 +39,6 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 		}
 	}
 
-	for entry in options.entries() {
-		let mut key = entry.0;
-		let mut val = entry.1.to_string();
-
-		if key == "bitrate" {
-			if stream.streamtype == "video" {
-				key = "b:v"
-			} else if stream.streamtype == "audio" {
-				key = "b:a";
-				val = format!("{}*{}", val, stream.channels.unwrap());
-			}
-		}
-
-		args.push(format!("-{key}"));
-		args.push(val);
-	}
-
 	// Is this a two-pass encode?
 	if stream.streamtype == "video" && options.has_key("bitrate") {
 		let temp = TempDir::new("videoproc");
@@ -68,15 +51,14 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 		let log = temp.path().join("ffmpeg2pass");
 
 		let mut p1 = args.clone();
+		let mut cargs = options_to_args(
+			stream,
+			options,
+			Some(1),
+			Some(format!("{}-{}", log.to_str().unwrap(), stream.index)),
+		);
 
-		if codec == "libx265" || codec == "hevc" {
-			p1.push_str("-x265-params");
-			p1.push(format!(
-				"pass=1:stats=\"{}-{}.x265.log\"",
-				log.to_str().unwrap(),
-				stream.index
-			));
-		}
+		p1.append(&mut cargs);
 
 		p1.push_str("-pass");
 		p1.push_str("1");
@@ -98,15 +80,14 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 		}
 
 		let mut p2 = args.clone();
+		let mut cargs = options_to_args(
+			stream,
+			options,
+			Some(2),
+			Some(format!("{}-{}", log.to_str().unwrap(), stream.index)),
+		);
 
-		if codec == "libx265" || codec == "hevc" {
-			p2.push_str("-x265-params");
-			p2.push(format!(
-				"pass=2:stats=\"{}-{}.x265.log\"",
-				log.to_str().unwrap(),
-				stream.index
-			));
-		}
+		p2.append(&mut cargs);
 
 		p2.push_str("-pass");
 		p2.push_str("2");
@@ -126,6 +107,9 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 			return Err(());
 		}
 	} else {
+		let mut cargs = options_to_args(stream, options, None, None);
+		args.append(&mut cargs);
+
 		args.push_str("-y");
 		args.push_str(path.to_str().unwrap());
 
@@ -148,4 +132,40 @@ pub fn run(stream: &mkv::Stream, output: &Path, options: &JsonValue) -> Result<m
 	}
 
 	Ok(new)
+}
+
+fn options_to_args(
+	stream: &mkv::Stream,
+	options: &JsonValue,
+	pass: Option<u32>,
+	passlog: Option<String>,
+) -> Vec<String> {
+	let mut args = Vec::<String>::new();
+
+	for entry in options.entries() {
+		let mut key = entry.0;
+		let mut val = entry.1.to_string();
+
+		if key == "bitrate" {
+			if stream.streamtype == "video" {
+				key = "b:v"
+			} else if stream.streamtype == "audio" {
+				key = "b:a";
+				val = format!("{}*{}", val, stream.channels.unwrap());
+			}
+		}
+
+		if key == "x265-params" {
+			if let Some(pass) = pass {
+				if let Some(passlog) = &passlog {
+					val = format!("{}:pass={}:stats={}.x265.log", val, pass, passlog);
+				}
+			}
+		}
+
+		args.push(format!("-{key}"));
+		args.push(val);
+	}
+
+	args
 }
