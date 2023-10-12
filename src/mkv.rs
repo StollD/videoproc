@@ -378,8 +378,10 @@ pub fn stream(file: &Path, index: u32) -> Result<Stream, ()> {
 			0.0
 		};
 
+		// ffmpeg rounds the value, e.g. for NTSC 16:9 it will output 853:480
+		// which is slightly below 16:9. Mediainfo reports the correct value.
 		let aspect = if streamtype == "video" {
-			Some(entry["display_aspect_ratio"].to_string())
+			Some(mediainfo["DisplayAspectRatio_String"].to_string())
 		} else {
 			None
 		};
