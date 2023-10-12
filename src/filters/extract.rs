@@ -49,8 +49,8 @@ fn extract_stream(stream: &mkv::Stream, output: &Path) -> Result<mkv::Stream, ()
 		let cmd = cmd.unwrap();
 
 		match cmd {
-			Some(0) => {},
-			Some(1) => {},
+			Some(0) => {}
+			Some(1) => {}
 			_ => {
 				logging::error!("Failed to create MKV: unexpected exit code");
 				return Err(());
@@ -83,8 +83,8 @@ fn extract_stream(stream: &mkv::Stream, output: &Path) -> Result<mkv::Stream, ()
 		let cmd = cmd.unwrap();
 
 		match cmd {
-			Some(0) => {},
-			Some(1) => {},
+			Some(0) => {}
+			Some(1) => {}
 			_ => {
 				logging::error!("Failed to create MKV: unexpected exit code");
 				return Err(());

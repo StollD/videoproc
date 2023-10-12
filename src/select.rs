@@ -74,7 +74,7 @@ fn find_match(cfg: &JsonValue, streams: &Vec<mkv::Stream>) -> Option<(JsonValue,
 
 fn check_match(cfg: &JsonValue, stream: &mkv::Stream) -> bool {
 	if cfg["missing"] == true {
-		return false
+		return false;
 	}
 
 	if cfg.has_key("type") && cfg["type"] != stream.streamtype.as_str() {
