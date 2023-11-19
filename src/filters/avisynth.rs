@@ -83,13 +83,15 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 			return Err(());
 		}
 
-		let avspipe = Command::new("avs2pipemod64")
-			.arg("-y4mp")
+		let avspipe = Command::new("avs2yuv")
+			.current_dir(script.parent().unwrap())
 			.arg(script.to_str().unwrap())
+			.arg("-o")
+			.arg("-")
 			.execute_check_exit_status_code(0);
 
 		if let Err(err) = avspipe {
-			logging::error!("Failed to run avs2pipemod64: {}", err);
+			logging::error!("Failed to run avs2yuv: {}", err);
 			return Err(());
 		}
 
@@ -108,15 +110,17 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 		return Err(());
 	}
 
-	let avspipe = Command::new("avs2pipemod64")
-		.arg("-y4mp")
+	let avspipe = Command::new("avs2yuv")
+		.current_dir(script.parent().unwrap())
 		.arg(script.to_str().unwrap())
+		.arg("-o")
+		.arg("-")
 		.stdout(Stdio::piped())
 		.stderr(Stdio::null())
 		.spawn();
 
 	if let Err(err) = avspipe {
-		logging::error!("Failed to run avs2pipemod64: {}", err);
+		logging::error!("Failed to run avs2yuv: {}", err);
 		return Err(());
 	}
 
@@ -133,6 +137,7 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 	args.push(path.to_str().unwrap());
 
 	let ffmpeg = Command::new("ffmpeg")
+		.current_dir(script.parent().unwrap())
 		.args(args)
 		.stdin(Stdio::from(avspipe.stdout.take().unwrap()))
 		.output();
@@ -144,42 +149,15 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 		return Err(());
 	}
 
-	let probe = Command::new("avs2pipemod64")
-		.arg("-info")
-		.arg(&script)
-		.output();
+	let probe = mkv::stream(&path, 0);
 
-	if let Err(err) = probe {
-		logging::error!("Failed to run avs2pipemod: {}", err);
+	if probe.is_err() {
+		logging::error!("Failed to probe output file!");
 		return Err(());
 	}
 
 	let probe = probe.unwrap();
-	let probe = String::from_utf8(probe.stdout);
-	if let Err(err) = probe {
-		logging::error!("Failed to decode avs2pipemod output: {}", err);
-		return Err(());
-	}
-
-	let probe = probe.unwrap();
-	let mut duration = 0.0;
-
-	for line in probe.split('\n') {
-		if !line.starts_with("v:duration") {
-			continue;
-		}
-
-		let split = line.split_whitespace().collect::<Vec<&str>>();
-		let dur = split[1].parse::<f32>();
-		if let Err(err) = dur {
-			logging::error!("Failed to parse duration: {}", err);
-			return Err(());
-		}
-
-		duration = dur.unwrap();
-	}
-
-	let speedup = stream.duration / duration;
+	let speedup = stream.duration / probe.duration;
 
 	let err = std::fs::remove_file(script);
 	if let Err(err) = err {

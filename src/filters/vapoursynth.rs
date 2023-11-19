@@ -76,6 +76,7 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 		}
 
 		let vspipe = Command::new("vspipe")
+			.current_dir(script.parent().unwrap())
 			.arg(script.to_str().unwrap())
 			.arg("-")
 			.execute_check_exit_status_code(0);
@@ -101,6 +102,7 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 	}
 
 	let vspipe = Command::new("vspipe")
+		.current_dir(script.parent().unwrap())
 		.arg(script.to_str().unwrap())
 		.arg("-")
 		.arg("-c")
@@ -127,6 +129,7 @@ pub fn run(stream: &mkv::Stream, output: &Path, filter: &Path) -> Result<mkv::St
 	args.push(path.to_str().unwrap());
 
 	let ffmpeg = Command::new("ffmpeg")
+		.current_dir(script.parent().unwrap())
 		.args(args)
 		.stdin(Stdio::from(vspipe.stdout.take().unwrap()))
 		.output();

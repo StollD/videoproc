@@ -152,9 +152,9 @@ fn run() -> i32 {
 		return 1;
 	}
 
-	let cmd = Command::new("avs2pipemod64").execute_check_exit_status_code(255);
+	let cmd = Command::new("avs2yuv").execute_check_exit_status_code(2);
 	if let Err(err) = cmd {
-		logging::error!("Failed to run avs2pipemod64: {}", err);
+		logging::error!("Failed to run avs2yuv: {}", err);
 		return 1;
 	}
 
